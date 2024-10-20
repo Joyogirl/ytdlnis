@@ -511,7 +511,7 @@ class HistoryFragment : Fragment(), HistoryAdapter.OnItemClickListener{
         websiteList = mutableListOf()
         for (item in list){
             if (item.website == "null" || item.website.isEmpty()) continue
-            if (!websiteList.contains(item.website)) websiteList.add(item.website)
+            if (!websiteList.any { it.contentEquals(item.website, true) }) websiteList.add(item.website)
         }
     }
 
@@ -684,7 +684,7 @@ class HistoryFragment : Fragment(), HistoryAdapter.OnItemClickListener{
                                     }
 
                                     if (!deleteFile){
-                                        Snackbar.make(recyclerView, getString(R.string.you_are_going_to_delete) + ": " + deletedItem.title, Snackbar.LENGTH_LONG)
+                                        Snackbar.make(recyclerView, getString(R.string.you_are_going_to_delete) + ": " + deletedItem.title, Snackbar.LENGTH_INDEFINITE)
                                             .setAction(getString(R.string.undo)) {
                                                 historyViewModel.insert(deletedItem)
                                             }.show()

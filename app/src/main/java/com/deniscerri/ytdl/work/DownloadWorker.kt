@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
 import android.content.res.Configuration
 import android.content.res.Resources
 import android.os.Build
@@ -73,7 +74,7 @@ class DownloadWorker(
         val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
         val time = System.currentTimeMillis() + 6000
         val queuedItems = dao.getQueuedScheduledDownloadsUntil(time)
-        val priorityItemIDs = inputData.getLongArray("priority_item_ids")!!.toMutableList()
+        val priorityItemIDs = (inputData.getLongArray("priority_item_ids") ?: longArrayOf()).toMutableList()
         val continueAfterPriorityIds = inputData.getBoolean("continue_after_priority_ids", true)
 
         // this is needed for observe sources call, so it wont create result items
@@ -105,8 +106,12 @@ class DownloadWorker(
         )
 
         val workNotif = notificationUtil.createDefaultWorkerNotification()
-        val foregroundInfo = ForegroundInfo(1000000000, workNotif)
-        setForegroundAsync(foregroundInfo)
+        val notificationID = 1000000000
+        if (Build.VERSION.SDK_INT > 33) {
+            setForegroundAsync(ForegroundInfo(notificationID, workNotif, FOREGROUND_SERVICE_TYPE_SPECIAL_USE))
+        }else{
+            setForegroundAsync(ForegroundInfo(notificationID, workNotif))
+        }
 
         queuedItems.collectLatest { items ->
             if (this@DownloadWorker.isStopped) return@collectLatest
